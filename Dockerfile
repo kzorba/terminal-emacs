@@ -1,0 +1,81 @@
+# Stage 1: Build Emacs (nox version)
+FROM ubuntu:noble AS builder
+LABEL org.opencontainers.image.authors="Kostas Zorbadelos <kzorba@nixly.net>"
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc-14 g++-14 libgccjit-14-dev \
+    make libc6-dev \
+    libgnutls28-dev \
+    libjansson-dev \
+    libtree-sitter-dev \
+    libxml2-dev \
+    zlib1g-dev \
+    pkg-config \
+    libncurses-dev \
+    texinfo \
+    wget \
+    git \
+    ca-certificates
+
+ENV EMACS_VERSION=30.1
+
+# Download and build Emacs
+RUN cd /tmp && \
+    wget http://ftpmirror.gnu.org/emacs/emacs-${EMACS_VERSION}.tar.gz && \
+    tar -xzf emacs-${EMACS_VERSION}.tar.gz && \
+    cd emacs-${EMACS_VERSION} && \
+    export CC=gcc-14 && \
+    export CXX=g++-14 && \
+    ./configure \
+      --without-x --without-x-toolkit \
+      --without-gconf --without-gsettings \
+      --without-imagemagick \
+      --without-sound --without-dbus \
+      --without-gpm && \
+    make -j"$(nproc)" && \
+    make install DESTDIR=/emacs-install
+
+# Stage 2: Create minimal runtime image
+FROM phusion/baseimage:noble-1.0.2
+LABEL org.opencontainers.image.authors="Kostas Zorbadelos <kzorba@nixly.net>"
+
+# ENV TERM=xterm-256color
+# ENV COLORTERM=truecolor
+ENV TERM=xterm-direct
+
+# Install minimal runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libgnutls30 \
+    libjansson4 \
+    libncurses6 \
+    libgccjit0 \
+    libtree-sitter0 \
+    ncurses-term \
+    ca-certificates \
+    git \
+    ripgrep \
+    fd-find \
+    zsh \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*rm -rf /var/lib/apt/lists/*
+
+# Copy Emacs from builder
+COPY --from=builder /emacs-install/usr/local /usr/local
+
+# Create an emacsuser, install oh-my-zsh and doom
+RUN useradd -d /home/emacsuser -m -s /bin/zsh emacsuser && \
+  /sbin/setuser emacsuser sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
+  /sbin/setuser emacsuser sh -c "git clone https://github.com/doomemacs/doomemacs.git ~/.emacs.d"
+
+# Copy dotfiles
+COPY dotfiles/doom /home/emacsuser/.doom.d
+COPY dotfiles/zsh/zshrc /home/emacsuser/.zshrc
+
+RUN chown -R emacsuser:emacsuser /home/emacsuser && \
+  /sbin/setuser emacsuser zsh -i -c "doom sync -u -b --force"
+
+# Copy the service scripts
+
+# Use baseimage-docker's init system.
+CMD ["/sbin/my_init"]
