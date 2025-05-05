@@ -44,21 +44,23 @@ LABEL org.opencontainers.image.authors="Kostas Zorbadelos <kzorba@nixly.net>"
 # ENV COLORTERM=truecolor
 ENV TERM=xterm-direct
 
-# Install minimal runtime dependencies
+# Install minimal runtime dependencies and tools to build
+# vterm-module
 RUN apt-get update && apt-get install -y \
     libgnutls30 \
     libjansson4 \
     libncurses6 \
     libgccjit0 \
     libtree-sitter0 \
+    libvterm-dev \
     ncurses-term \
     ca-certificates \
     git \
     ripgrep \
     fd-find \
     zsh \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*rm -rf /var/lib/apt/lists/*
+    cmake \
+    libtool-bin
 
 # Copy Emacs from builder
 COPY --from=builder /emacs-install/usr/local /usr/local
@@ -73,9 +75,24 @@ COPY dotfiles/doom /home/emacsuser/.doom.d
 COPY dotfiles/zsh/zshrc /home/emacsuser/.zshrc
 
 RUN chown -R emacsuser:emacsuser /home/emacsuser && \
-  /sbin/setuser emacsuser zsh -i -c "doom sync -u -b --force"
+    /sbin/setuser emacsuser zsh -i -c "doom sync -u -b --force" && \
+    # Build vterm-module (C extention)
+    /sbin/setuser emacsuser zsh -i -c \
+    "cmake -S ~/.emacs.d/.local/straight/repos/emacs-libvterm -B ~/.emacs.d/.local/straight/repos/emacs-libvterm/build" && \
+    /sbin/setuser emacsuser zsh -i -c \
+    "make -C ~/.emacs.d/.local/straight/repos/emacs-libvterm/build" && \
+    /sbin/setuser emacsuser zsh -i -c \
+    "cp ~/.emacs.d/.local/straight/repos/emacs-libvterm/vterm-module.so ~/.emacs.d/.local/straight/build-30.1/vterm/" && \
+    /sbin/setuser emacsuser zsh -i -c \
+    "make -C ~/.emacs.d/.local/straight/repos/emacs-libvterm/build clean" && \
+    # Clean up the build tools and apt files
+    apt-get purge -y cmake libtool-bin && \
+    apt-get auto-remove -y && \
+    apt-get clean  && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/lib/apt/lists/*
 
 # Copy the service scripts
+
 
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
