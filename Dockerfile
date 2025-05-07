@@ -74,9 +74,10 @@ RUN useradd -d /home/emacsuser -m -s /bin/zsh emacsuser && \
 COPY dotfiles/doom /home/emacsuser/.doom.d
 COPY dotfiles/zsh/zshrc /home/emacsuser/.zshrc
 
-RUN chown -R emacsuser:emacsuser /home/emacsuser && \
+RUN mkdir /w && \
+    chown -R emacsuser:emacsuser /home/emacsuser && \
     /sbin/setuser emacsuser zsh -i -c "doom sync -u -b --force" && \
-    # Build vterm-module (C extention)
+    # Build vterm-module (C code involved)
     /sbin/setuser emacsuser zsh -i -c \
     "cmake -S ~/.emacs.d/.local/straight/repos/emacs-libvterm -B ~/.emacs.d/.local/straight/repos/emacs-libvterm/build" && \
     /sbin/setuser emacsuser zsh -i -c \
@@ -91,8 +92,16 @@ RUN chown -R emacsuser:emacsuser /home/emacsuser && \
     apt-get clean  && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/lib/apt/lists/*
 
-# Copy the service scripts
+# Fix emacs user and group ids during container startup
+# we do this to match the uid, gid of the container user
+COPY scripts/emacs_ids.sh /etc/my_init.d/90_emacs_ids.sh
+RUN chmod +x /etc/my_init.d/90_emacs_ids.sh
 
+# Copy the service script
+# emacs daemon
+RUN mkdir /etc/service/emacs-daemon
+COPY scripts/emacs-daemon.sh /etc/service/emacs-daemon/run
+RUN chmod +x /etc/service/emacs-daemon/run
 
 # Use baseimage-docker's init system.
 CMD ["/sbin/my_init"]
