@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     git \
     ca-certificates
 
-ENV EMACS_VERSION=30.1
+ENV EMACS_VERSION="30.1"
 
 # Download and build Emacs
 RUN cd /tmp && \
@@ -40,9 +40,16 @@ RUN cd /tmp && \
 FROM phusion/baseimage:noble-1.0.2
 LABEL org.opencontainers.image.authors="Kostas Zorbadelos <kzorba@nixly.net>"
 
-# ENV TERM=xterm-256color
-# ENV COLORTERM=truecolor
-ENV TERM=xterm-direct
+# Support a truecolor terminal. You can comment xterm-direct and
+# uncomment the other 2 lines, could be more portable.
+# ENV TERM="xterm-256color"
+# ENV COLORTERM="truecolor"
+ENV TERM="xterm-direct"
+
+# This directory should map to the user's home directory in the host.
+# A startup script checks for it to create stuff in emacsuser's
+# home directory.
+ENV WORKDIR="/w"
 
 # Install minimal runtime dependencies and tools to build
 # vterm-module
@@ -74,8 +81,7 @@ RUN useradd -d /home/emacsuser -m -s /bin/zsh emacsuser && \
 COPY dotfiles/doom /home/emacsuser/.doom.d
 COPY dotfiles/zsh/zshrc /home/emacsuser/.zshrc
 
-RUN mkdir /w && \
-    chown -R emacsuser:emacsuser /home/emacsuser && \
+RUN chown -R emacsuser:emacsuser /home/emacsuser && \
     /sbin/setuser emacsuser zsh -i -c "doom sync -u -b --force" && \
     # Build vterm-module (C code involved)
     /sbin/setuser emacsuser zsh -i -c \
@@ -92,10 +98,9 @@ RUN mkdir /w && \
     apt-get clean  && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/lib/apt/lists/*
 
-# Fix emacs user and group ids during container startup
-# we do this to match the uid, gid of the container user
-COPY scripts/emacs_ids.sh /etc/my_init.d/90_emacs_ids.sh
-RUN chmod +x /etc/my_init.d/90_emacs_ids.sh
+# Adjust the container to the host environment
+COPY scripts/adjust_env.sh /etc/my_init.d/90_adjust_env.sh
+RUN chmod +x /etc/my_init.d/90_adjust_env.sh
 
 # Copy the service script
 # emacs daemon

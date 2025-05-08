@@ -1,7 +1,28 @@
 #!/usr/bin/env sh
 #
+# Adjustments of the container to the environment during boot
+#
+
+if [ -f "$WORKDIR/.gitconfig" ]; then
+    echo "Found .gitconfig in $WORKDIR, creating symbolic link for emacs"
+    ln -s $WORKDIR/.gitconfig /home/emacsuser/.gitconfig
+fi
+
+if [ -d "$WORKDIR/.ssh" ]; then
+    echo "Found .ssh directory in $WORKDIR, creating symbolic link for emacs"
+    ln -s $WORKDIR/.ssh /home/emacsuser/.ssh
+fi
+
+if [ -d "$WORKDIR/org" ]; then
+    echo "Found org directory in $WORKDIR, creating symbolic link for emacs"
+    ln -s $WORKDIR/org /home/emacsuser/org
+fi
+
+#
 # If EMACS_UID and EMACS_GID are passed in the environment
-# fix emacsuser according to them
+# fix emacsuser according to them.
+# We do this to match the uid, gid of the container user
+# on the host.
 #
 
 # Check if EMACS_UID is set and not empty

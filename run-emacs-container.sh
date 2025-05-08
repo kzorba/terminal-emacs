@@ -1,8 +1,10 @@
 #!/usr/bin/env sh
 
+export WORKDIR="/w"
 # Start docker daemon before this.
 docker run -d --rm --name ghcr.io/kzorba/terminal-emacs \
   -e EMACS_UID=$(id -u) \
   -e EMACS_GID=$(id -g) \
-  -v "$HOME":/w \
+  -e WORKDIR=$WORKDIR
+  -v "$HOME":"$WORKDIR" \
   kzorba/terminal-emacs
