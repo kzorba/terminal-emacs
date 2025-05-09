@@ -3,20 +3,33 @@
 # Adjustments of the container to the environment during boot
 #
 
+# Create symlinks
 if [ -f "$WORKDIR/.gitconfig" ]; then
     echo "Found .gitconfig in $WORKDIR, creating symbolic link for emacs"
     ln -s $WORKDIR/.gitconfig /home/emacsuser/.gitconfig
+    chown -h emacsuser:emacsuser /home/emacsuser/.gitconfig
 fi
 
 if [ -d "$WORKDIR/.ssh" ]; then
     echo "Found .ssh directory in $WORKDIR, creating symbolic link for emacs"
     ln -s $WORKDIR/.ssh /home/emacsuser/.ssh
+    chown -h emacsuser:emacsuser /home/emacsuser/.ssh
 fi
 
 if [ -d "$WORKDIR/org" ]; then
     echo "Found org directory in $WORKDIR, creating symbolic link for emacs"
     ln -s $WORKDIR/org /home/emacsuser/org
+    chown -h emacsuser:emacsuser /home/emacsuser/org
 fi
+
+# direnv config
+# we trust all .envrc files under the exposed host directory
+mkdir -p /home/emacsuser/.config/direnv
+cat <<EOF >> /home/emacsuser/.config/direnv/direnv.toml
+[whitelist]
+prefix = [ "$WORKDIR" ]
+EOF
+chown -R emacsuser:emacsuser /home/emacsuser/.config/direnv
 
 #
 # If EMACS_UID and EMACS_GID are passed in the environment
