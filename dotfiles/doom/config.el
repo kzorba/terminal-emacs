@@ -173,13 +173,15 @@
 ;; Disable format-on-save behavior in Markdown buffers
 (setq-hook! 'gfm-mode-hook +format-inhibit t)
 
+;; https://www.gnu.org/software/emacs/manual/html_node/epa/GnuPG-Pinentry.html
+(setq epg-pinentry-mode 'loopback)
+
 ;; Python formatting
 ;; Replace default (black) to use ruff for sorting import and formatting.
 (setq-hook! 'python-mode-hook +format-with 'ruff)
 (setq-hook! 'python-ts-mode-hook +format-with 'ruff)
 
 ;; Disable Dockerfile formatting
-
 (after! dockerfile-mode
   (set-formatter! 'dockfmt nil))
 
