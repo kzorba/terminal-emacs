@@ -73,12 +73,14 @@ RUN apt-get update && apt-get install -y \
 # Copy Emacs from builder
 COPY --from=builder /emacs-install/usr/local /usr/local
 
-# Delete ubuntu user, create an emacsuser, install oh-my-zsh, doom, uv
+# Delete ubuntu user, create an emacsuser, install oh-my-zsh,
+# doom, uv, ruff
 RUN deluser --remove-home ubuntu && \
   useradd -d /home/emacsuser -m -s /bin/zsh emacsuser && \
   /sbin/setuser emacsuser sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
   /sbin/setuser emacsuser sh -c "git clone https://github.com/doomemacs/doomemacs.git ~/.emacs.d" && \
-  /sbin/setuser emacsuser sh -c "curl -LsSf https://astral.sh/uv/install.sh | sh"
+  /sbin/setuser emacsuser sh -c "curl -LsSf https://astral.sh/uv/install.sh | sh" && \
+  /sbin/setuser emacsuser sh -c "curl -LsSf https://astral.sh/ruff/install.sh | sh"
 
 # Copy dotfiles
 COPY dotfiles/doom /home/emacsuser/.doom.d
