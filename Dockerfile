@@ -49,7 +49,7 @@ ENV TERM="xterm-direct"
 # This directory should map to the user's home directory in the host.
 # A startup script checks for it to create stuff in emacsuser's
 # home directory.
-ENV WORKDIR="/w"
+ENV WORKDIR="/v"
 
 # Install runtime dependencies, tools to build vterm-module
 # and our dev tools
@@ -87,7 +87,7 @@ COPY dotfiles/doom /home/emacsuser/.doom.d
 COPY dotfiles/zsh/zshrc /home/emacsuser/.zshrc
 
 RUN chown -R emacsuser:emacsuser /home/emacsuser && \
-    /sbin/setuser emacsuser zsh -i -c "doom sync -u -b --force" && \
+    /sbin/setuser emacsuser zsh -i -c "doom sync -u -b --force && doom env" && \
     # Build vterm-module (C code involved)
     /sbin/setuser emacsuser zsh -i -c \
     "cmake -S ~/.emacs.d/.local/straight/repos/emacs-libvterm -B ~/.emacs.d/.local/straight/repos/emacs-libvterm/build" && \
