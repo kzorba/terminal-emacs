@@ -1,0 +1,20 @@
+[user]
+	name = Kostas Zorbadelos
+	email = kzorba@nixly.net
+[color]
+	ui = auto
+[alias]
+	lg = log --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr %an)%Creset' --abbrev-commit --date=relative
+        unstage = reset HEAD --
+        last = log -1 HEAD
+        co = checkout
+        br = branch
+        ci = commit
+        st = status
+        lgb = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset%n' --abbrev-commit --date=relative --branches
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

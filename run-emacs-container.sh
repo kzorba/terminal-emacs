@@ -7,4 +7,5 @@ docker run -d --rm --name terminal-emacs \
   -e EMACS_GID=$(id -g) \
   -e WORKDIR=$WORKDIR \
   -v "$HOME":"$WORKDIR" \
+  -p 2222:22 \
   kzorba/terminal-emacs

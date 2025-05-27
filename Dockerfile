@@ -76,15 +76,17 @@ COPY --from=builder /emacs-install/usr/local /usr/local
 # Delete ubuntu user, create an emacsuser, install oh-my-zsh,
 # doom, uv, ruff
 RUN deluser --remove-home ubuntu && \
-  useradd -d /home/emacsuser -m -s /bin/zsh emacsuser && \
-  /sbin/setuser emacsuser sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
-  /sbin/setuser emacsuser sh -c "git clone https://github.com/doomemacs/doomemacs.git ~/.emacs.d" && \
-  /sbin/setuser emacsuser sh -c "curl -LsSf https://astral.sh/uv/install.sh | sh" && \
-  /sbin/setuser emacsuser sh -c "curl -LsSf https://astral.sh/ruff/install.sh | sh"
+    useradd -d /home/emacsuser -m -s /bin/zsh emacsuser && \
+    passwd -d emacsuser && \
+    /sbin/setuser emacsuser sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
+    /sbin/setuser emacsuser sh -c "git clone https://github.com/doomemacs/doomemacs.git ~/.emacs.d" && \
+    /sbin/setuser emacsuser sh -c "curl -LsSf https://astral.sh/uv/install.sh | sh" && \
+    /sbin/setuser emacsuser sh -c "curl -LsSf https://astral.sh/ruff/install.sh | sh"
 
 # Copy dotfiles
 COPY dotfiles/doom /home/emacsuser/.doom.d
 COPY dotfiles/zsh/zshrc /home/emacsuser/.zshrc
+COPY dotfiles/git/gitconfig /home/emacsuser/.gitconfig
 
 RUN chown -R emacsuser:emacsuser /home/emacsuser && \
     /sbin/setuser emacsuser zsh -i -c "doom sync -u -b --force && doom env" && \
@@ -107,12 +109,16 @@ RUN chown -R emacsuser:emacsuser /home/emacsuser && \
 COPY scripts/adjust_env.sh /etc/my_init.d/90_adjust_env.sh
 RUN chmod +x /etc/my_init.d/90_adjust_env.sh
 
-# # Enable ssh service
-# RUN rm -f /etc/service/sshd/down
-# # Regenerate SSH host keys. baseimage-docker does not contain any, so you
-# # have to do that yourself. You may also comment out this instruction; the
-# # init system will auto-generate one during boot.
-# RUN /etc/my_init.d/00_regen_ssh_host_keys.sh
+# Enable ssh service
+## Install our SSH key for emacsuser
+COPY emacsuser.pub /tmp/emacsuser.pub
+RUN mkdir /home/emacsuser/.ssh && \
+    chmod 700 /home/emacsuser/.ssh && \
+    cat /tmp/emacsuser.pub >> /home/emacsuser/.ssh/authorized_keys && \
+    chown -R emacsuser:emacsuser /home/emacsuser/.ssh && \
+    rm -f /tmp/emacsuser.pub && \
+    rm -f /etc/service/sshd/down && \
+    /etc/my_init.d/00_regen_ssh_host_keys.sh
 
 # Copy the service script
 # emacs daemon
