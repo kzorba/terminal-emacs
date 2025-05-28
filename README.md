@@ -62,6 +62,8 @@ The above command is in the script `run-emacs-container.sh` and fetches the late
 
 The container will run an emacs in daemon mode (under `emacsuser`) and map the host user's home directory under `$WORKDIR` in the container. Uid and gid of emacs user in the container will be adjusted to match the user on the host. With this all editing of host files (under the home directory) will keep proper ownership. 
 
+The repository contains a public ssh key for emacsuser, you should replace it with your own public key (assuming you have generated a key-pair).
+
 ``` shell
 # Settings to put in ~/.ssh/config
 
