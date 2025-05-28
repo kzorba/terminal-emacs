@@ -2,7 +2,7 @@
 
 export WORKDIR="/v"
 # Start docker daemon before this.
-docker run -d --rm --name terminal-emacs \
+docker run -d --rm --name devcon \
   -e EMACS_UID=$(id -u) \
   -e EMACS_GID=$(id -g) \
   -e WORKDIR=$WORKDIR \
