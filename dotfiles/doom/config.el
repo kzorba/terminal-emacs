@@ -177,9 +177,12 @@
 (setq epg-pinentry-mode 'loopback)
 
 ;; Python formatting
+;;
+;; Configure apheleia to run the ruff-isort formatter followed by the ruff
+;; formatter.
 ;; Replace default (black) to use ruff for sorting import and formatting.
-(setq-hook! 'python-mode-hook +format-with 'ruff)
-(setq-hook! 'python-ts-mode-hook +format-with 'ruff)
+(setq-hook! 'python-mode-hook +format-with '(ruff-isort ruff))
+(setq-hook! 'python-ts-mode-hook +format-with '(ruff-isort ruff))
 
 ;; Disable Dockerfile formatting
 (after! dockerfile-mode
