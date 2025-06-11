@@ -176,13 +176,21 @@
 ;; https://www.gnu.org/software/emacs/manual/html_node/epa/GnuPG-Pinentry.html
 (setq epg-pinentry-mode 'loopback)
 
-;; Python formatting
+;; Python stuff
 ;;
 ;; Configure apheleia to run the ruff-isort formatter followed by the ruff
 ;; formatter.
 ;; Replace default (black) to use ruff for sorting import and formatting.
 (setq-hook! 'python-mode-hook +format-with '(ruff-isort ruff))
 (setq-hook! 'python-ts-mode-hook +format-with '(ruff-isort ruff))
+
+;; Use basedpyright if available as a lang server and
+;; avoid using ruff (in lsp-mode).
+;; If basedpyright is missing and pyright is available we use that.
+(after! lsp-mode
+  (when (executable-find "basedpyright")
+    (setq lsp-pyright-langserver-command "basedpyright"))
+  (setq lsp-disabled-clients '(ruff)))
 
 ;; Disable Dockerfile formatting
 (after! dockerfile-mode
