@@ -180,16 +180,24 @@
 ;;
 ;; Configure apheleia to run the ruff-isort formatter followed by the ruff
 ;; formatter.
-;; Replace default (black) to use ruff for sorting import and formatting.
+;; Replace default (black) to use ruff for sorting imports and formatting.
 (setq-hook! 'python-mode-hook +format-with '(ruff-isort ruff))
 (setq-hook! 'python-ts-mode-hook +format-with '(ruff-isort ruff))
 
-;; Use basedpyright if available as a lang server and
-;; avoid using ruff (in lsp-mode).
-;; If basedpyright is missing and pyright is available we use that.
+;; Python lsp-mode: the idea is that we use direnv to activate the venv
+;; of the python project we develop and we expect the lang server to be
+;; installed there.
+;; First priority for python lang server is basedpyright (if available
+;; in the PATH) and we fallback to pyright.
+;; Avoid using ruff (as a lang server).
+;; CAVEAT: this sets the python langserver globally in lsp-mode. If after
+;; the initial loading we change to a python project that does not have the
+;; initially set langserver installed in its venv, lsp-mode will fail.
+;; For now, we have no other option than to restart emacs when this happens.
 (after! lsp-mode
-  (when (executable-find "basedpyright")
-    (setq lsp-pyright-langserver-command "basedpyright"))
+  (if (executable-find "basedpyright")
+      (setq lsp-pyright-langserver-command "basedpyright")
+    (setq lsp-pyright-langserver-command "pyright"))
   (setq lsp-disabled-clients '(ruff)))
 
 ;; Disable Dockerfile formatting
