@@ -13,11 +13,16 @@ fi
 # direnv config
 # we trust all .envrc files under the exposed host directory
 mkdir -p /home/emacsuser/.config/direnv
-cat <<EOF > /home/emacsuser/.config/direnv/direnv.toml
+cat <<EOF >/home/emacsuser/.config/direnv/direnv.toml
 [whitelist]
 prefix = [ "$WORKDIR" ]
 EOF
 chown -R emacsuser:emacsuser /home/emacsuser/.config/direnv
+
+# fix .cache permissions
+if [ -d /home/emacsuser/.cache ]; then
+    chown -R emacsuser:emacsuser /home/emacsuser/.cache
+fi
 
 #
 # If EMACS_UID and EMACS_GID are passed in the environment
