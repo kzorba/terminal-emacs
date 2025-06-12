@@ -36,7 +36,7 @@ RUN cd /tmp && \
     make -j"$(nproc)" && \
     make install DESTDIR=/emacs-install
 
-# Stage 2: Create minimal runtime image
+# Stage 2: Create runtime image with all tools
 FROM phusion/baseimage:noble-1.0.2
 LABEL org.opencontainers.image.authors="Kostas Zorbadelos <kzorba@nixly.net>"
 
@@ -54,6 +54,7 @@ ENV WORKDIR="/v"
 # Install runtime dependencies, tools to build vterm-module
 # and our dev tools
 RUN apt-get update && apt-get install -y \
+    build-essential \
     ca-certificates \
     cmake \
     direnv \
@@ -68,20 +69,25 @@ RUN apt-get update && apt-get install -y \
     libvterm-dev \
     ncurses-term \
     ripgrep \
+    shfmt \
     zsh
 
 # Copy Emacs from builder
 COPY --from=builder /emacs-install/usr/local /usr/local
 
 # Delete ubuntu user, create an emacsuser, install oh-my-zsh,
-# doom, uv, ruff
+# doom, uv, ruff, rustup
 RUN deluser --remove-home ubuntu && \
     useradd -d /home/emacsuser -m -s /bin/zsh emacsuser && \
     passwd -d emacsuser && \
     /sbin/setuser emacsuser sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
     /sbin/setuser emacsuser sh -c "git clone https://github.com/doomemacs/doomemacs.git ~/.emacs.d" && \
     /sbin/setuser emacsuser sh -c "curl -LsSf https://astral.sh/uv/install.sh | sh" && \
-    /sbin/setuser emacsuser sh -c "curl -LsSf https://astral.sh/ruff/install.sh | sh"
+    /sbin/setuser emacsuser sh -c "curl -LsSf https://astral.sh/ruff/install.sh | sh" && \
+    /sbin/setuser emacsuser sh -c "curl https://sh.rustup.rs -sSf | sh -s -- -y" && \
+    /sbin/setuser emacsuser zsh -i -c "rustup component add rust-analyzer" && \
+    /sbin/setuser emacsuser zsh -i -c "rustup show" && \
+    /sbin/setuser emacsuser zsh -i -c "rust-analyzer --version"
 
 # Copy dotfiles
 COPY dotfiles/doom /home/emacsuser/.doom.d
