@@ -174,7 +174,8 @@
 (setq-hook! 'gfm-mode-hook +format-inhibit t)
 
 ;; https://www.gnu.org/software/emacs/manual/html_node/epa/GnuPG-Pinentry.html
-(setq epg-pinentry-mode 'loopback)
+;; This is not needed if we enable +gnupg under :config default in init.el
+;;(setq epg-pinentry-mode 'loopback)
 
 ;; Python stuff
 ;;
