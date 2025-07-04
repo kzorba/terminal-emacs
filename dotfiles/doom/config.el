@@ -191,15 +191,25 @@
 ;; First priority for python lang server is basedpyright (if available
 ;; in the PATH) and we fallback to pyright.
 ;; Avoid using ruff (as a lang server).
-;; CAVEAT: this sets the python langserver globally in lsp-mode. If after
+;; CAVEAT: this sets lsp-pyright-langserver-command per buffer for lsp-mode.
+;; Unfortunately, after lsp-mode loading setting this variable does not play
+;; a role, the initial lsp client object is reused. So, if after
 ;; the initial loading we change to a python project that does not have the
 ;; initially set langserver installed in its venv, lsp-mode will fail.
 ;; For now, we have no other option than to restart emacs when this happens.
-(after! lsp-mode
-  (if (executable-find "basedpyright")
-      (setq lsp-pyright-langserver-command "basedpyright")
-    (setq lsp-pyright-langserver-command "pyright"))
-  (setq lsp-disabled-clients '(ruff)))
+;;
+;; original code
+;; (after! lsp-mode
+;;   (if (executable-find "basedpyright")
+;;       (setq lsp-pyright-langserver-command "basedpyright")
+;;     (setq lsp-pyright-langserver-command "pyright"))
+;;   (setq lsp-disabled-clients '(ruff)))
+
+;; By Henrik and ChatGPT
+(add-hook! '(envrc-after-update-environment-hook python-mode-hook)
+  (setq lsp-disabled-clients '(ruff))
+  (when-let ((pyr (executable-find "basedpyright")))
+    (setq-local lsp-pyright-langserver-command (file-name-nondirectory pyr))))
 
 ;; Disable Dockerfile formatting
 (after! dockerfile-mode
