@@ -4,6 +4,9 @@
 #
 
 # Create symlinks
+# A shortcut for the WORKDIR
+[ "$WORKDIR" != "/h" ] && ln -s $WORKDIR /h
+
 if [ -d "$WORKDIR/org" ]; then
     echo "Found org directory in $WORKDIR, creating symbolic link for emacs"
     ln -s $WORKDIR/org /home/emacsuser/org

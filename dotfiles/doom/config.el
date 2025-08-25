@@ -146,6 +146,12 @@
   ;; Display timezone information in timestamps. This only affects timestamp display,
   ;; it does not add calculations or proper timezone support in agenda.
   (setq org-time-stamp-formats '("<%Y-%m-%d %a>" . "<%Y-%m-%d %a %H:%M %Z>"))
+  ;; org beamer PDF output
+  (setq org-latex-pdf-process
+        '("lualatex -interaction nonstopmode -output-directory %o %f"
+          "biber %b"
+          "lualatex -interaction nonstopmode -output-directory %o %f"
+          "lualatex -interaction nonstopmode -output-directory %o %f"))
   )
 
 ;; Default values for various variables

@@ -49,11 +49,12 @@ ENV TERM="xterm-direct"
 # This directory should map to the user's home directory in the host.
 # A startup script checks for it to create stuff in emacsuser's
 # home directory.
-ENV WORKDIR="/v"
+ENV WORKDIR="/h"
 
 # Install runtime dependencies, tools to build vterm-module
 # and our dev tools
 RUN apt-get update && apt-get install -y \
+    biber \
     build-essential \
     ca-certificates \
     cmake \
@@ -70,6 +71,13 @@ RUN apt-get update && apt-get install -y \
     ncurses-term \
     ripgrep \
     shfmt \
+    texlive \
+    texlive-bibtex-extra \
+    texlive-extra-utils \
+    texlive-lang-greek \
+    texlive-latex-extra \
+    texlive-pictures \
+    texlive-xetex \
     zsh
 
 # Copy Emacs from builder
