@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-export WORKDIR="/v"
+export WORKDIR=$HOME
 # Start docker daemon before this.
 docker run -d --rm --name devcon \
   --hostname devcon \
