@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y \
     git \
     ca-certificates
 
-ENV EMACS_VERSION="30.1"
+ENV EMACS_VERSION="30.2"
 
 # Download and build Emacs
 RUN cd /tmp && \
@@ -110,7 +110,7 @@ RUN chown -R emacsuser:emacsuser /home/emacsuser && \
     /sbin/setuser emacsuser zsh -i -c \
     "make -C ~/.emacs.d/.local/straight/repos/emacs-libvterm/build" && \
     /sbin/setuser emacsuser zsh -i -c \
-    "cp ~/.emacs.d/.local/straight/repos/emacs-libvterm/vterm-module.so ~/.emacs.d/.local/straight/build-30.1/vterm/" && \
+    "cp ~/.emacs.d/.local/straight/repos/emacs-libvterm/vterm-module.so ~/.emacs.d/.local/straight/build-30.2/vterm/" && \
     /sbin/setuser emacsuser zsh -i -c \
     "make -C ~/.emacs.d/.local/straight/repos/emacs-libvterm/build clean" && \
     # Clean up the build tools and apt files
