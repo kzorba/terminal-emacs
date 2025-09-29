@@ -61,6 +61,7 @@ RUN apt-get update && apt-get install -y \
     direnv \
     fd-find \
     git \
+    git-lfs \
     libgnutls30 \
     libjansson4 \
     libncurses6 \
