@@ -69,6 +69,7 @@ RUN apt-get update && apt-get install -y \
     libtool-bin \
     libtree-sitter0 \
     libvterm-dev \
+    lldb \
     ncurses-term \
     ripgrep \
     shfmt \
@@ -103,6 +104,7 @@ COPY dotfiles/doom /home/emacsuser/.doom.d
 COPY dotfiles/zsh/zshrc /home/emacsuser/.zshrc
 COPY dotfiles/git/gitconfig /home/emacsuser/.gitconfig
 
+# libvterm
 RUN chown -R emacsuser:emacsuser /home/emacsuser && \
     /sbin/setuser emacsuser zsh -i -c "doom sync -u -b --force && doom env" && \
     # Build vterm-module (C code involved)
@@ -113,7 +115,20 @@ RUN chown -R emacsuser:emacsuser /home/emacsuser && \
     /sbin/setuser emacsuser zsh -i -c \
     "cp ~/.emacs.d/.local/straight/repos/emacs-libvterm/vterm-module.so ~/.emacs.d/.local/straight/build-30.2/vterm/" && \
     /sbin/setuser emacsuser zsh -i -c \
-    "make -C ~/.emacs.d/.local/straight/repos/emacs-libvterm/build clean" && \
+    "make -C ~/.emacs.d/.local/straight/repos/emacs-libvterm/build clean"
+
+# codelldb
+RUN ARCH="$(uname -m)" && \
+    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then \
+        CODELLDB=codelldb-linux-arm64.vsix; \
+    else \
+        CODELLDB=codelldb-linux-x64.vsix; \
+    fi && \
+    curl -L \
+      -o /tmp/$CODELLDB \
+      https://github.com/vadimcn/codelldb/releases/download/v1.11.8/$CODELLDB && \
+    /sbin/setuser emacsuser zsh -i -c \
+    "mkdir -p ~/.doom.d/debug-adapters && unzip /tmp/$CODELLDB -d ~/.doom.d/debug-adapters/codelldb" && \
     # Clean up the build tools and apt files
     apt-get purge -y cmake libtool-bin && \
     apt-get auto-remove -y && \

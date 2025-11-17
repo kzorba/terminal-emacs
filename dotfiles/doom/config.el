@@ -217,6 +217,10 @@
   (when-let ((pyr (executable-find "basedpyright")))
     (setq-local lsp-pyright-langserver-command (file-name-nondirectory pyr))))
 
+;; dape debugging
+(after! dape
+  (setq dape-buffer-window-arrangement 'gud))
+
 ;; Disable Dockerfile formatting
 (after! dockerfile-mode
   (set-formatter! 'dockfmt nil))
