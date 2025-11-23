@@ -5,69 +5,52 @@ This project contains Doom (GNU) Emacs with all necessary settings (and preferen
 ``` text
 - org mode agenda / time and task management
 - org mode presentations and Beamer / PDF export
+- markdown file editing
 - encrypting / decrypting files with gpg
 - Python development (using uv and ruff)
-- Rust development
+- Rust development and debugging via codelldp / dape
+- Editing files / development inside docker containers (tramp using docker: access)
 - ...
 ```
 
 ## Why?
 
-This is meant to be used as a development tool giving the same experience in different hosts. I am interested in Linux and MacOS environments, but should support anything that docker supports. One can just run the container (see `run-emacs-container.sh`) in a host running docker (engine or desktop) and should be ready to start developing or have the needed emacs tools. 
+This is meant to be used as a development tool giving the same experience on different hosts. I am interested in Linux and MacOS environments, but should support anything that docker supports. One can just run the container (see `run-emacs-container.sh`) in a host running docker (engine or desktop) and should be ready to start developing or have the needed emacs tools.
 
 See the doom files under `dotfiles` in the repository to see the activated options.
 
-You connect to the container using ssh that forwards ssh-agent for authentication. The docker host is expected to have the necessary ssh client config plus some development tools (eg python `nox`).
-
-## Environment variables
-
-The following environment variables can be used to parameterize the container:
-
-``` text
-|-----------+----------------------------------------------------------------------|
-| Variable  | Description                                                          |
-|-----------+----------------------------------------------------------------------|
-| EMACS_UID | The uid number emacs uses (effective uid of the emacs process).      |
-|           | Passing this to the image, causes the uid of the container emacsuser |
-|           | to change and all files emacs creates will have this ownership.      |
-|           | This should match the uid of the host user running the container.    |
-| EMACS_GID | The (primary) gid number emacs uses.                                 |
-|           | Same as previously, passing it to the image causes the gid of the    |
-|           | internal emacsuser to change.                                        |
-|           | This should match the gid of the host user running the container.    |
-| WORKDIR   | The container filesystem mount point to access the host user files.  |
-|           | Used as the CWD of the emacs daemon process. The container start     |
-|           | script sets this to $HOME of the user on the host so the container   |
-|           | sees the host files in the same path as the user's home directory.   |
-|           | Change this to change the path were emacs will find the host         |
-|           | user's files.                                                        |
-|           | The container's boot script looks for certain paths under $WORKDIR   |
-|           | and creates symbolic links (eg org). It also creates a /h symlink    |
-|           | to create a short path to the host files.                            |
-|-----------+----------------------------------------------------------------------|
-```
+You connect to the container using ssh that forwards ssh-agent for authentication. The docker host is expected to have at least the necessary ssh client config. Although not strictly necessary, for Python development, the host should also contain `nox` and `uv` (to test / lint completely outside the development environment).
 
 ## Usage
 
-Setup docker (engine or desktop) on the host, clone this repo and build the image with
+Before everything (obviously) install docker engine or docker-desktop on the machine where terminal-emacs will run.
+Then, you need to build the container on the host where you will be working on (use `build-emacs-container.sh`). After that run the container using `run-emacs-container.sh`. You can stop the container via `docker stop devcon`.
 
 ``` shell
-$ docker build --progress plain -t kzorba/terminal-emacs .
+$ cd WorkingArea
+$ git clone https://github.com/kzorba/terminal-emacs.git
+$ cd terminal-emacs
+$ ./build-emacs-container.sh
+...
+(the build can take several minutes depending on the power of the host)
+$ docker images | grep emacs
+kzorba/terminal-emacs                                        latest        51b27e2f3c31   2 hours ago     6.29GB
+$ ./run-emacs-container.sh
+Docker socket: /var/run/docker.sock
+ad69138bf8e1872dcb6831fb6a6995a2648f7d930002f4189c90c85b62e34622
+Container 'devcon' started successfully
+$ which ec
+ec: aliased to ssh -t devcon zsh -i -c emacs-set-ssh-auth-sock
+$ ec
+(you are now in terminal-emacs viewing the Doom screen)
 ```
 
-After that, run the image using
+You will need to replace `emacsuser.pub` with another public key by generating an ssh-keypair (`ssh-keygen -t ed25519...`) keep the private key ONLY on your local working machine / laptop and do not put it on the remote servers. `ssh-agent` will take care of the authentication on the remote machines.
+
+Here is the relevant ssh configuration on `.ssh/config`:
 
 ``` shell
-./run-emacs-container.sh
-```
-
-The container will run an emacs in daemon mode (under `emacsuser`) and map the host user's home directory under `$WORKDIR` in the container. Uid and gid of emacs user in the container will be adjusted to match the user on the host. With this all editing of host files (under the home directory) will keep proper ownership. 
-
-The repository contains a public ssh key for emacsuser, you should replace it with your own public key (assuming you have generated a key-pair).
-
-``` shell
-# Settings to put in ~/.ssh/config
-
+(local machine running terminal-emacs)
 Protocol 2
 ForwardAgent yes
 AddKeysToAgent yes
@@ -79,7 +62,20 @@ Host devcon
     IdentityFile ~/.ssh/id_ed25519_emacsuser
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
+    
+(remote server running terminal-emacs)
+Protocol 2
+ForwardAgent yes
+
+Host devcon
+    HostName localhost
+    Port 2222
+    User emacsuser
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
 ```
+
+A proposed alias for your shell:
 
 ``` shell
 # alias to local shell
@@ -94,5 +90,12 @@ You can of course also create shortcuts for launching this via the MacOS dock or
 You can stop the container (removing it completely) using
 
 ``` shell
-docker stop devcon
+$ docker stop devcon
 ```
+
+## Extra Information
+
+The main idea is that you run terminal-emacs on your local laptop / development host and on each remote server where you do development. 
+During the container build process on each host, the generated image will contain a user with the same UID/GIDs as your host user, to be able to access and edit files on your home directory. The image will also get the correct value for the docker group since the host's docker socket is mounted in terminal-emacs. 
+
+In this way, terminal-emacs can access and edit files inside other local docker containers, using `docker:user@container` method of tramp. You can also run `magit` on the other containers (provided the container you connect to has git available). This is how you can do remote development both on a server host and on remote docker containers.
