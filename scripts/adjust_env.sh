@@ -22,8 +22,3 @@ cat <<EOF >/h/${USERNAME}/.config/direnv/direnv.toml
 prefix = [ "$WORKDIR" ]
 EOF
 chown -R ${USERNAME}:${USERNAME} /h/${USERNAME}/.config/direnv
-
-# fix .cache permissions
-if [ -d /h/${USERNAME}/.cache ]; then
-    chown -R ${USERNAME}:${USERNAME} /h/${USERNAME}/.cache
-fi
