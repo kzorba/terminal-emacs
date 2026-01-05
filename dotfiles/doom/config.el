@@ -114,7 +114,8 @@
           ("~/org/Tasks.org" :tag . "INBOX")
                                         ; ("~/org/Archive/2023.org" :maxlevel . 1)
                                         ; ("~/org/Archive/2024.org" :maxlevel . 1)
-          ("~/org/Archive/2025.org" :maxlevel . 1)
+                                        ; ("~/org/Archive/2025.org" :maxlevel . 1)
+          ("~/org/Archive/2026.org" :maxlevel . 1)
           ))
   ;; org default notes file (fallback for org-capture.el
   (setq org-default-notes-file "~/org/Notes.org")
