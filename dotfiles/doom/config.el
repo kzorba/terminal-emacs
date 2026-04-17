@@ -226,6 +226,11 @@
 (after! dockerfile-mode
   (set-formatter! 'dockfmt nil))
 
+;; gptel
+;; Make GitHub Copilot the default backend, claude-sonnet-4.6 the default model
+(setq gptel-model 'claude-sonnet-4.6
+      gptel-backend (gptel-make-gh-copilot "Copilot"))
+
 ;; c-x-c-c in daemon mode
 ;; using an argument (c-u) kills also the daemon saving buffers
 (defun kzorba/emacsclient-c-x-c-c (&optional arg)

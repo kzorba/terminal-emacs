@@ -50,11 +50,13 @@ ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=emacsuser
 ARG DOCKER_GID=1000
+ARG NODE_MAJOR=22
 
 ENV USERNAME=${USERNAME}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 ENV DOCKER_GID=${DOCKER_GID}
+ENV NODE_MAJOR=${NODE_MAJOR}
 
 # Support a truecolor terminal. You can comment xterm-direct and
 # uncomment the other 2 lines, could be more portable.
@@ -68,7 +70,7 @@ ENV TERM="xterm-direct"
 ENV WORKDIR="/h"
 
 # Install runtime dependencies, tools to build vterm-module,
-# our dev tools and docker cli
+# our dev tools, docker cli, pi coding agent (so, nodejs)
 RUN apt-get update && \
     apt-get install -y ca-certificates curl && \
     install -m 0755 -d /etc/apt/keyrings && \
@@ -79,7 +81,12 @@ RUN apt-get update && \
          "signed-by=/etc/apt/keyrings/docker.asc]" \
          "https://download.docker.com/linux/ubuntu" \
          "noble stable" \
-        > /etc/apt/sources.list.d/docker.list && \
+      > /etc/apt/sources.list.d/docker.list && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | \
+      gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg]" \
+         "https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" \
+      > /etc/apt/sources.list.d/nodesource.list && \
     apt-get update && \
     apt-get install -y \
     biber \
@@ -99,6 +106,7 @@ RUN apt-get update && \
     libvterm-dev \
     lldb \
     ncurses-term \
+    nodejs \
     ripgrep \
     shfmt \
     pandoc \
@@ -113,6 +121,9 @@ RUN apt-get update && \
 
 # Copy Emacs from builder
 COPY --from=builder /emacs-install/usr/local /usr/local
+
+# Install pi coding agent in the system
+RUN npm install -g @mariozechner/pi-coding-agent
 
 # Delete ubuntu user, create a ${USERNAME}
 RUN deluser --remove-home ubuntu && \

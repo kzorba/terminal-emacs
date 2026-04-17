@@ -55,8 +55,15 @@
   :recipe (:host github :repo "vincentbernat/junos-mode"))
 (package! jinja2-mode)
 
+;; gptel-agent gives agentic features to gptel
+(package! gptel-agent
+  :recipe (:host github :repo "karthink/gptel-agent"))
+;; get pi-coding-agent (emacs intergration with pi coding agent)
+(package! pi-coding-agent
+  :recipe (:host github :repo "dnouri/pi-coding-agent"))
+
 ;; Upgrade/downgrade org-mode to see if 100% CPU freeze bug
 ;; on macos goes away
-;(package! org :pin "7a3fc3d78bad1fb4d7afaccdaca8fc1dbffe4b5f")
-; release_9.7.12
-;(package! org :pin "28c83e678f674aaadf1bcb068f72dcca0abcf14d")
+;;(package! org :pin "7a3fc3d78bad1fb4d7afaccdaca8fc1dbffe4b5f")
+;; release_9.7.12
+;;(package! org :pin "28c83e678f674aaadf1bcb068f72dcca0abcf14d")
