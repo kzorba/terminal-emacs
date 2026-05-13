@@ -231,6 +231,124 @@
 (setq gptel-model 'claude-sonnet-4.6
       gptel-backend (gptel-make-gh-copilot "Copilot"))
 
+;;
+;; tabspaces settings
+;; ATTENTION: comment out doom workspaces!!!
+;;
+
+(defun my/magit-status-project ()
+  "Open Magit status for the current project directory."
+  (interactive)
+  (magit-status (project-root (project-current))))
+
+(use-package! tabspaces
+  :hook (doom-init-ui . tabspaces-mode)
+  :init
+  (setq tabspaces-session-file (file-name-concat doom-profile-data-dir "workspaces.el")
+        tab-bar-show 1)  ; put 1 to hide if only one workspace
+
+  :config
+  ;; Run once when tabspaces-mode first activates (daemon startup)
+  (add-hook 'tabspaces-mode-hook
+            (lambda ()
+              (when tabspaces-mode
+                (tabspaces-switch-or-create-workspace "Main"))))
+  ;; Show Doom's dashboard in a Main workspace whenever a new client frame
+  ;; is created.
+  ;; ATTENTION: We had a pain making this work, crashing emacs in the process.
+  ;; Here is the logic:
+  ;; Capture the default tab name before switching, then close just that one tab.
+  ;; Also, defer the cleanup with run-with-idle-timer 0 so it runs after the frame
+  ;; is fully ready
+  (add-hook 'after-make-frame-functions
+            (lambda (frame)
+              (when tabspaces-mode
+                (with-selected-frame frame
+                  ;; Capture the initial default tab name before we switch away
+                  (let ((initial-tab (alist-get 'name (car (tab-bar-tabs)))))
+                    (tabspaces-switch-or-create-workspace "Main")
+                    (+dashboard/open frame)
+                    ;; Defer the tab cleanup until the frame is fully ready
+                    (run-with-idle-timer
+                     0 nil
+                     (lambda ()
+                       (when (frame-live-p frame)
+                         (with-selected-frame frame
+                           (unless (string= initial-tab "Main")
+                             (tab-bar-close-tab-by-name initial-tab)))))))))))
+
+  :custom
+  (tabspaces-keymap-prefix nil) ; We manage our own keybindings
+  (tabspaces-use-filtered-buffers-as-default t)
+  (tabspaces-default-tab "Main")
+  (tabspaces-remove-to-default t)
+  (tabspaces-include-buffers '("*scratch*"))
+  (tabspaces-initialize-project-with-todo nil)
+  (tabspaces-todo-file-name "project-todo.org")
+  ;; sessions (do not auto save / auto restore)
+  (tabspaces-session nil)
+  (tabspaces-session-auto-restore nil)
+  ;; additional options
+  (tabspaces-fully-resolve-paths t)  ; Resolve relative project paths to absolute
+  (tabspaces-exclude-buffers '("*Messages*" "*Compile-Log*"))  ; Additional buffers to exclude
+  (tab-bar-new-tab-choice "*scratch*")
+  (tabspaces-project-switch-commands
+   '((project-find-file "Find file" ?f)
+     (project-find-regexp "Find regexp" ?r)
+     (project-find-dir "Find directory" ?d)
+     (my/magit-status-project "Magit" ?m)
+     (project-eshell "Eshell" ?e)
+     (project-any-command "Other" ?o))))
+
+;; tabspaces key bindings
+;;
+;; Handle the keymap completely independently from Doom's machinery
+;; which-key is the package that shows the popup menu when you pause after a prefix key
+(defvar my/workspaces-map (make-sparse-keymap) "Keymap for workspace bindings.")
+
+(map! :leader "w" my/workspaces-map)
+(which-key-add-key-based-replacements "C-c w" "workspaces/windows")
+
+(map! :map my/workspaces-map
+      "n" #'tab-bar-new-tab
+      "o" #'tabspaces-open-or-create-project-and-workspace
+      "r" #'tab-bar-rename-tab
+      "b" #'tabspaces-switch-to-buffer
+      "t" #'tabspaces-switch-buffer-and-tab
+      "1" #'(lambda () (interactive) (tab-bar-select-tab 1))
+      "2" #'(lambda () (interactive) (tab-bar-select-tab 2))
+      "3" #'(lambda () (interactive) (tab-bar-select-tab 3))
+      "4" #'(lambda () (interactive) (tab-bar-select-tab 4))
+      "C" #'tabspaces-clear-buffers
+      "R" #'tabspaces-remove-selected-buffer
+      "d" #'tabspaces-close-workspace
+      "k" #'tabspaces-kill-buffers-close-workspace
+      "l" #'tabspaces-restore-session
+      "s" #'tabspaces-switch-or-create-workspace
+      "S" #'tabspaces-save-session
+      "p" #'tabspaces-save-current-project-session
+      "w" #'tabspaces-show-workspaces)
+
+(which-key-add-key-based-replacements
+  "C-c w n" "Create workspace"
+  "C-c w o" "Open project workspace"
+  "C-c w r" "Rename workspace"
+  "C-c w b" "Switch to buffer"
+  "C-c w t" "Switch buffer and tab"
+  "C-c w 1" "Switch to workspace 1"
+  "C-c w 2" "Switch to workspace 2"
+  "C-c w 3" "Switch to workspace 3"
+  "C-c w 4" "Switch to workspace 4"
+  "C-c w C" "Clear buffers"
+  "C-c w R" "Remove buffer"
+  "C-c w d" "Close workspace"
+  "C-c w k" "Close workspace kill buffers"
+  "C-c w l" "Restore session"
+  "C-c w s" "Switch or create workspace"
+  "C-c w S" "Save all workspaces"
+  "C-c w p" "Save current project"
+  "C-c w w" "Show workspaces")
+
 ;; c-x-c-c in daemon mode
 ;; using an argument (c-u) kills also the daemon saving buffers
 (defun kzorba/emacsclient-c-x-c-c (&optional arg)

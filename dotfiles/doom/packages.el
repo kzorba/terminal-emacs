@@ -62,6 +62,10 @@
 (package! pi-coding-agent
   :recipe (:host github :repo "dnouri/pi-coding-agent"))
 
+;; tabspaces. Make sure to disable doom workspaces module!!!
+(package! tabspaces :pin "9fdbb0c9a7a153459408c1a93f9a9139d00f254a"
+  :recipe (:host github :repo "mclear-tools/tabspaces"))
+
 ;; Upgrade/downgrade org-mode to see if 100% CPU freeze bug
 ;; on macos goes away
 ;;(package! org :pin "7a3fc3d78bad1fb4d7afaccdaca8fc1dbffe4b5f")
