@@ -50,13 +50,13 @@ ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=emacsuser
 ARG DOCKER_GID=1000
-ARG NODE_MAJOR=22
 
 ENV USERNAME=${USERNAME}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 ENV DOCKER_GID=${DOCKER_GID}
-ENV NODE_MAJOR=${NODE_MAJOR}
+ENV NODE_MAJOR=22
+ENV PI_AGENT_VERSION=0.78.0
 
 # Support a truecolor terminal. You can comment xterm-direct and
 # uncomment the other 2 lines, could be more portable.
@@ -123,7 +123,7 @@ RUN apt-get update && \
 COPY --from=builder /emacs-install/usr/local /usr/local
 
 # Install pi coding agent in the system
-RUN npm install -g @mariozechner/pi-coding-agent
+RUN npm install -g --ignore-scripts --min-release-age=0 @earendil-works/pi-coding-agent@${PI_AGENT_VERSION}
 
 # Delete ubuntu user, create a ${USERNAME}
 RUN deluser --remove-home ubuntu && \
@@ -149,12 +149,19 @@ USER ${USERNAME}
 
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
     git clone https://github.com/doomemacs/doomemacs.git ~/.emacs.d/ && \
+    # astral.sh Python tools
     curl -LsSf https://astral.sh/uv/install.sh | sh && \
     curl -LsSf https://astral.sh/ruff/install.sh | sh && \
+    # pi coding agent packages / extensions
+    pi install npm:@narumitw/pi-plan-mode && \
+    pi install npm:pi-defender && \
+    pi install npm:pi-mcp-adapter && \
+    # Rust toolchain
     curl https://sh.rustup.rs -sSf | sh -s -- -y && \
     ~/.cargo/bin/rustup component add rust-analyzer && \
     ~/.cargo/bin/rustup show && \
     ~/.cargo/bin/rust-analyzer --version && \
+    # zsh / ssh key
     mv /tmp/.zshrc ~/.zshrc && \
     mkdir /h/${USERNAME}/.ssh && \
     chmod 700 /h/${USERNAME}/.ssh && \
