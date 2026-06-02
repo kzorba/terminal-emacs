@@ -192,31 +192,34 @@
 (setq-hook! 'python-mode-hook +format-with '(ruff-isort ruff))
 (setq-hook! 'python-ts-mode-hook +format-with '(ruff-isort ruff))
 
-;; Python lsp-mode: the idea is that we use direnv to activate the venv
-;; of the python project we develop and we expect the lang server to be
-;; installed there.
-;; First priority for python lang server is basedpyright (if available
-;; in the PATH) and we fallback to pyright.
-;; Avoid using ruff (as a lang server).
-;; CAVEAT: this sets lsp-pyright-langserver-command per buffer for lsp-mode.
-;; Unfortunately, after lsp-mode loading setting this variable does not play
-;; a role, the initial lsp client object is reused. So, if after
-;; the initial loading we change to a python project that does not have the
-;; initially set langserver installed in its venv, lsp-mode will fail.
-;; For now, we have no other option than to restart emacs when this happens.
+;; eglot LSP configuration
+;; use ty / basedpyright / pyright for Python projects (this order
+;; of preference) and rust-analyzer for Rust projects.
 ;;
-;; original code
-;; (after! lsp-mode
-;;   (if (executable-find "basedpyright")
-;;       (setq lsp-pyright-langserver-command "basedpyright")
-;;     (setq lsp-pyright-langserver-command "pyright"))
-;;   (setq lsp-disabled-clients '(ruff)))
+;; override the LSP server per project using a directory-local variable
+;; (.dir-locals.el file in the project root)
+;; Examples
+;; ;;; Directory Local Variables (force pyright)
+;; ((python-base-mode . ((eglot-server-programs . ((python-base-mode . ("pyright-langserver" "--stdio")))))))
+;; ;;; Directory Local Variables (force ty)
+;; ((python-base-mode . ((eglot-server-programs . ((python-base-mode . ("ty" "server")))))))
 
-;; By Henrik and ChatGPT
-(add-hook! '(envrc-after-update-environment-hook python-mode-hook)
-  (setq lsp-disabled-clients '(ruff))
-  (when-let ((pyr (executable-find "basedpyright")))
-    (setq-local lsp-pyright-langserver-command (file-name-nondirectory pyr))))
+(defun my/python-lsp-server (&rest _)
+  "Return the first available Python LSP server."
+  (cond
+   ((executable-find "ty")                      '("ty" "server"))
+   ((executable-find "basedpyright-langserver") '("basedpyright-langserver" "--stdio"))
+   ((executable-find "pyright-langserver")      '("pyright-langserver" "--stdio"))
+   (t (error "No Python LSP server found"))))
+
+(after! eglot
+  (add-to-list 'eglot-server-programs
+               '(python-base-mode . my/python-lsp-server))
+  (add-to-list 'eglot-server-programs
+               '(rust-mode . ("rust-analyzer"))))
+
+(add-hook! 'python-base-mode-hook 'eglot-ensure)
+(add-hook! 'rust-mode-hook 'eglot-ensure)
 
 ;; dape debugging
 (after! dape
