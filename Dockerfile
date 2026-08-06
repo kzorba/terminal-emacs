@@ -50,11 +50,15 @@ ARG USER_UID=1000
 ARG USER_GID=1000
 ARG USERNAME=emacsuser
 ARG DOCKER_GID=1000
+ARG DOOM_REPO=https://github.com/doomemacs/doomemacs.git
+ARG DOOM_COMMIT=30f1bf1ef18e6b2add008e1333726c2362827571
 
 ENV USERNAME=${USERNAME}
 ENV USER_UID=${USER_UID}
 ENV USER_GID=${USER_GID}
 ENV DOCKER_GID=${DOCKER_GID}
+ENV DOOM_REPO=${DOOM_REPO}
+ENV DOOM_COMMIT=${DOOM_COMMIT}
 ENV NODE_MAJOR=22
 ENV PI_AGENT_VERSION=0.78.0
 
@@ -147,8 +151,16 @@ RUN chown -R ${USER_UID}:${USER_GID} /h/${USERNAME}/.doom.d && \
 # Install the tools and ssh key in ${USERNAME}
 USER ${USERNAME}
 
+# Specific Doom emacs commit for reproducibility
+RUN mkdir ~/.emacs.d/ \
+ && git -C ~/.emacs.d/ init \
+ && git -C ~/.emacs.d/ remote add origin "$DOOM_REPO" \
+ && git -C ~/.emacs.d/ fetch --depth=1 origin "$DOOM_COMMIT" \
+ && git -C ~/.emacs.d/ checkout --detach FETCH_HEAD \
+ && test "$(git -C ~/.emacs.d/ rev-parse HEAD)" = "$DOOM_COMMIT"
+
+# Tools under $USERNAME
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
-    git clone https://github.com/doomemacs/doomemacs.git ~/.emacs.d/ && \
     # astral.sh Python tools
     curl -LsSf https://astral.sh/uv/install.sh | sh && \
     curl -LsSf https://astral.sh/ruff/install.sh | sh && \
