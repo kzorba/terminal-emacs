@@ -2,6 +2,7 @@
 
 export WORKDIR=$HOME
 export USERNAME=emacsuser
+export MY_NET=devnet
 
 # Function to resolve symlink (portable)
 resolve_socket() {
@@ -42,8 +43,13 @@ if [ -S "/var/run/docker.sock" ]; then
         echo "  -> resolves to: $REAL_SOCKET"
     fi
 
+    # Check and create the network we will attach to
+    docker network inspect "$MY_NET" >/dev/null 2>&1 ||
+        docker network create "$MY_NET"
+
     docker run -d --rm --name devcon \
         --hostname devcon \
+        --net $MY_NET \
         -e WORKDIR=$WORKDIR \
         -v "$HOME":"$WORKDIR" \
         -v "$REAL_SOCKET":"/var/run/docker.sock" \
