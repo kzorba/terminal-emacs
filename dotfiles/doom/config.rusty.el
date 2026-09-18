@@ -21,10 +21,8 @@
 ;; See 'C-h v doom-font' for documentation and more examples of what they
 ;; accept. For example:
 ;;
-;;(setq doom-font (font-spec :family "Fira Code" :size 12 :weight 'semi-light)
-;;      doom-variable-pitch-font (font-spec :family "Fira Sans" :size 13))
-(setq doom-font (font-spec :family "FiraCode Nerd Font Mono" :size 15 :weight 'medium)
-      doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Mono" :size 15))
+;; (setq doom-font (font-spec :family "FiraCode Nerd Font Mono" :size 15 :weight 'medium)
+;;       doom-variable-pitch-font (font-spec :family "FiraCode Nerd Font Mono" :size 15))
 ;;
 ;; If you or Emacs can't find your font, use 'M-x describe-font' to look them
 ;; up, `M-x eval-region' to execute elisp code, and 'M-x doom/reload-font' to
@@ -33,7 +31,7 @@
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
-;; `load-theme' function. This is the default:
+;; `load-theme' function.
 ;; Some dark themes doom-one was default
                                         ;(setq doom-theme 'doom-one)
 (setq doom-theme 'doom-nord)
@@ -45,6 +43,13 @@
                                         ;(setq doom-theme 'tango)
                                         ;(setq doom-theme 'whiteboard)
 
+;; Specify both a dark and light theme, like so and Doom will choose which one
+;; to load based on your system light/dark setting:
+;;
+;;   (setq doom-theme '(doom-one   . doom-one-light))   ; (DARK . LIGHT)
+;;
+;; If you want more pro-active theme switching based on OS light/dark mode, look
+;; up the `auto-dark' package.
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -56,23 +61,22 @@
 
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
-;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
+;; `with-eval-after-load' block, otherwise Doom's defaults may override your
+;; settings. E.g.
 ;;
-;;   (after! PACKAGE
+;;   (with-eval-after-load 'PACKAGE
 ;;     (setq x y))
 ;;
 ;; The exceptions to this rule:
 ;;
 ;;   - Setting file/directory variables (like `org-directory')
 ;;   - Setting variables which explicitly tell you to set them before their
-;;     package is loaded (see 'C-h v VARIABLE' to look up their documentation).
+;;     package is loaded (see 'C-h v VARIABLE' to look them up).
 ;;   - Setting doom variables (which start with 'doom-' or '+').
 ;;
 ;; Here are some additional functions/macros that will help you configure Doom.
 ;;
 ;; - `load!' for loading external *.el files relative to this one
-;; - `use-package!' for configuring packages
-;; - `after!' for running code after a package has loaded
 ;; - `add-load-path!' for adding directories to the `load-path', relative to
 ;;   this file. Emacs searches the `load-path' when you load packages with
 ;;   `require' or `use-package'.
@@ -91,110 +95,41 @@
 ;; kzorba config
 ;;
 
-;; properly set greek font in MacOS
-(add-hook! 'after-setting-font-hook :append
-           ;;(set-fontset-font t 'greek (font-spec :family "Monaco" :weight 'semi-light :size 14))
-           (set-fontset-font t 'greek (font-spec :family "FiraCode Nerd Font Mono")))
+;; Switch to zsh in terminals
+(setq ghostel-shell "/bin/zsh")
 
-;; remap meta to Apple command key
-(setq mac-command-modifier 'meta)
-;; remap super to Apple option key
-(setq mac-option-modifier 'super)
-
-;; org-mode related
-
-(after! org
-  ;; org files for agenda feed
-  (setq org-agenda-files '("~/org/Tasks.org"
-                           "~/org/CalEvents.org"
-                           "~/org/Archive"))
-  ;; target files for refile command
-  (setq org-refile-targets
-        '((nil :maxlevel . 3)
-          ("~/org/Tasks.org" :tag . "INBOX")
-                                        ; ("~/org/Archive/2023.org" :maxlevel . 1)
-                                        ; ("~/org/Archive/2024.org" :maxlevel . 1)
-                                        ; ("~/org/Archive/2025.org" :maxlevel . 1)
-          ("~/org/Archive/2026.org" :maxlevel . 1)
-          ))
-  ;; org default notes file (fallback for org-capture.el
-  (setq org-default-notes-file "~/org/Notes.org")
-  ;; store new notes at the beginning of a file or entry
-  (setq org-reverse-note-order t)
-  ;; Save Org buffers after refiling!
-  ;; Does not work when we do org-agenda-refile, so save buffers manually for now
-                                        ;(advice-add 'org-refile :after 'org-save-all-org-buffers)
-  ;; display log in agenda
-  (setq org-agenda-start-with-log-mode t)
-  ;; when a task is DONE log time
-  (setq org-log-done 'time)
-  ;; The `text-scale-amount' for `org-tree-slide-mode'
-  (setq +org-present-text-scale 2)
-  ;; our capture templates
-  (setq org-capture-templates
-        '(("n" "Add notes")
-          ("nl" "Item with WWW link" entry
-           (file "~/org/Notes.org")
-           "* To read: [[%?]]  :reading:\nCaptured date: %T\nDescription: %^{Description|An interesting read}"
-           :prepend t :empty-lines-after 1)
-          ("ni" "An idea" entry
-           (file "~/org/Notes.org")
-           "* %^{Title|IDEA}  :idea:\nCaptured date: %T\n%?" :prepend t :empty-lines-after 1)
-          ("no" "Other item" entry
-           (file "~/org/Notes.org")
-           "* %^{Title}\nCaptured date: %T\n%?" :prepend t :empty-lines-after 1))
-        )
-  ;; Display timezone information in timestamps. This only affects timestamp display,
-  ;; it does not add calculations or proper timezone support in agenda.
-  (setq org-time-stamp-formats '("<%Y-%m-%d %a>" . "<%Y-%m-%d %a %H:%M %Z>"))
-  ;; org beamer PDF output
-  (setq org-latex-pdf-process
-        '("lualatex -interaction nonstopmode -output-directory %o %f"
-          "biber %b"
-          "lualatex -interaction nonstopmode -output-directory %o %f"
-          "lualatex -interaction nonstopmode -output-directory %o %f"))
-  )
+;; mouse wheel hack. In terminals, we need to re-initialize mouse-wheel-mode.
+;; Something is wrong in emacs 31.1 with xterm-mouse-mode + mouse-wheel-mode +
+;; doom tty initialization
+(add-hook! 'tty-setup-hook :append
+  (lambda ()
+    (mouse-wheel-mode -1)
+    (mouse-wheel-mode 1)))
 
 ;; Default values for various variables
 (setq default-frame-alist '((width . 110)
                             (height . 48)) ; frame width, height
-                                        ; search path for projects by projectile
+      ;; search path for projects by projectile
       projectile-project-search-path '("~/WorkingArea")
-                                        ; disable variable-pitch font in treemacs
+      ;; disable variable-pitch font in treemacs
       doom-themes-treemacs-enable-variable-pitch nil)
 ;; printer for emacs Generic-PDF (define it in cups)
 (setq printer-name "Generic-PDF")
 ;; set web browser to chromium
 ;; use htmlfontify-buffer to print nicely via chromium
-                                        ;(setq browse-url-browser-function 'browse-url-chromium)
-
-;; Switched to zsh to have the same for macOS
-(setq vterm-shell "/bin/zsh")
+;;(setq browse-url-browser-function 'browse-url-chromium)
 
 ;; Customize indent for json-mode
-(add-hook 'json-mode-hook
-          (lambda ()
-            (make-local-variable 'js-indent-level)
-            (setq js-indent-level 4)))
+(add-hook! 'json-mode-hook
+  (lambda ()
+    (make-local-variable 'js-indent-level)
+    (setq js-indent-level 4)))
 
 ;; Disable format-on-save behavior in Markdown buffers
 (setq-hook! 'gfm-mode-hook +format-inhibit t)
 
-;; https://www.gnu.org/software/emacs/manual/html_node/epa/GnuPG-Pinentry.html
-;; This is not needed if we enable +gnupg under :config default in init.el
-;;(setq epg-pinentry-mode 'loopback)
-
-;; Python stuff
-;;
-;; Configure apheleia to run the ruff-isort formatter followed by the ruff
-;; formatter.
-;; Replace default (black) to use ruff for sorting imports and formatting.
-(setq-hook! 'python-mode-hook +format-with '(ruff-isort ruff))
-(setq-hook! 'python-ts-mode-hook +format-with '(ruff-isort ruff))
-
 ;; eglot LSP configuration
-;; use ty / basedpyright / pyright for Python projects (this order
-;; of preference) and rust-analyzer for Rust projects.
+;; use rust-analyzer for Rust projects.
 ;;
 ;; override the LSP server per project using a directory-local variable
 ;; (.dir-locals.el file in the project root)
@@ -204,35 +139,19 @@
 ;; ;;; Directory Local Variables (force ty)
 ;; ((python-base-mode . ((eglot-server-programs . ((python-base-mode . ("ty" "server")))))))
 
-(defun my/python-lsp-server (&rest _)
-  "Return the first available Python LSP server."
-  (cond
-   ((executable-find "ty")                      '("ty" "server"))
-   ((executable-find "basedpyright-langserver") '("basedpyright-langserver" "--stdio"))
-   ((executable-find "pyright-langserver")      '("pyright-langserver" "--stdio"))
-   (t (error "No Python LSP server found"))))
-
 (after! eglot
-  (add-to-list 'eglot-server-programs
-               '(python-base-mode . my/python-lsp-server))
   (add-to-list 'eglot-server-programs
                '(rust-mode . ("rust-analyzer"))))
 
-(add-hook! 'python-base-mode-hook 'eglot-ensure)
 (add-hook! 'rust-mode-hook 'eglot-ensure)
 
-;; dape debugging
-(after! dape
-  (setq dape-buffer-window-arrangement 'gud))
+;; https://www.gnu.org/software/emacs/manual/html_node/epa/GnuPG-Pinentry.html
+;; This is not needed if we enable +gnupg under :config default in init.el
+;;(setq epg-pinentry-mode 'loopback)
 
 ;; Disable Dockerfile formatting
 (after! dockerfile-mode
   (set-formatter! 'dockfmt nil))
-
-;; gptel
-;; Make GitHub Copilot the default backend, claude-sonnet-4.6 the default model
-(setq gptel-model 'claude-sonnet-4.6
-      gptel-backend (gptel-make-gh-copilot "Copilot"))
 
 ;;
 ;; tabspaces settings

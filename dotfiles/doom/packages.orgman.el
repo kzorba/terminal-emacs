@@ -1,9 +1,12 @@
-;; -*- no-byte-compile: t; -*-
-;;; $DOOMDIR/packages.el
+;;; $DOOMDIR/packages.el -*- lexical-binding: t; no-byte-compile: t -*-
 
-;; To install a package with Doom you must declare them here and run 'doom sync'
-;; on the command line, then restart Emacs for the changes to take effect -- or
-;; use 'M-x doom/reload'.
+;; To install a package:
+;;
+;;   1. Declare them here in a `package!' statement,
+;;   2. Run 'doom sync' in the shell,
+;;   3. Restart Emacs.
+;;
+;; Use 'C-h f package\!' to look up documentation for the `package!' macro.
 
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
@@ -49,25 +52,6 @@
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
 
-;; kzorba
-
-(package! junos-mode
-  :recipe (:host github :repo "vincentbernat/junos-mode"))
-(package! jinja2-mode)
-
-;; gptel-agent gives agentic features to gptel
-(package! gptel-agent
-  :recipe (:host github :repo "karthink/gptel-agent"))
-;; get pi-coding-agent (emacs intergration with pi coding agent)
-(package! pi-coding-agent
-  :recipe (:host github :repo "dnouri/pi-coding-agent"))
-
 ;; tabspaces. Make sure to disable doom workspaces module!!!
 (package! tabspaces :pin "9fdbb0c9a7a153459408c1a93f9a9139d00f254a"
   :recipe (:host github :repo "mclear-tools/tabspaces"))
-
-;; Upgrade/downgrade org-mode to see if 100% CPU freeze bug
-;; on macos goes away
-;;(package! org :pin "7a3fc3d78bad1fb4d7afaccdaca8fc1dbffe4b5f")
-;; release_9.7.12
-;;(package! org :pin "28c83e678f674aaadf1bcb068f72dcca0abcf14d")
