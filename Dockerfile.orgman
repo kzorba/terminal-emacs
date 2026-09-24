@@ -98,6 +98,7 @@ RUN apt-get update && \
     libtree-sitter0 \
     ncurses-base \
     ncurses-term \
+    pandoc \
     ripgrep \
     shfmt \
     zsh
