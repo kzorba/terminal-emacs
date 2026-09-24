@@ -64,6 +64,7 @@ ENV NODE_MAJOR=24
 ENV PI_AGENT_VERSION=0.85.1
 ENV DIRENV_VERSION=2.37.1
 ENV RUST_VERSION=1.98.1
+ENV PREK_VERSION=0.5.3
 
 # Support a truecolor terminal. You can comment xterm-direct and
 # uncomment the other 2 lines, could be more portable.
@@ -156,6 +157,10 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
     ~/.cargo/bin/rustup component add rust-analyzer && \
     ~/.cargo/bin/rustup show && \
     ~/.cargo/bin/rust-analyzer --version && \
+    # Prek (pre-commit replacement)
+    curl --proto '=https' --tlsv1.2 -LsSf \
+      https://github.com/j178/prek/releases/download/v${PREK_VERSION}/prek-installer.sh | \
+      sh && \
     # pi coding agent packages / extensions
     pi install npm:@narumitw/pi-plan-mode && \
     pi install npm:pi-mcp-adapter && \
